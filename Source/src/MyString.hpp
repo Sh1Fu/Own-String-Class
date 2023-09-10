@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <cstdlib>
 #include <cassert>
+#include <initializer_list>
 class MyString
 {
 protected:
@@ -23,7 +24,7 @@ public:
      */
     MyString(void);
     MyString(const char *str, size_t new_len = 0);
-    MyString(const char (&str_as_array)[]);
+    MyString(std::initializer_list<char> list);
     MyString(std::string &str);
     MyString(const char *str, int elems_count);
     MyString(int rep_times, const char sym);

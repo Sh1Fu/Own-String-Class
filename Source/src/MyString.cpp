@@ -18,8 +18,23 @@ MyString::MyString(const char *s, size_t new_len)
     str_[len_] = '\0';
 }
 
-/* list-based constructor. Calls ``Mystring::Mystring(const char *s)`` */
-MyString::MyString(const char (&char_array)[]) : MyString(char_array, static_cast<size_t>(sizeof(*char_array) / sizeof(&char_array[0]))) {}
+/* 
+ * list-based constructor. Calls ``Mystring::Mystring(const char *s)`` 
+ * Redesigned because of new standards and new compilers. Now ``std::initializer_list`` class is used
+ */
+MyString::MyString(std::initializer_list<char> list)
+{
+    len_ = list.size();
+    cur_capacity_ = len_ + 1;
+    str_ = new char[cur_capacity_];
+    size_t loop_index = 0;
+    for (auto & element : list)
+    {
+        str_[loop_index] = element;
+        ++loop_index;
+    }
+    str_[loop_index] = '\0';
+}
 
 /*
  * Constructor to copy std::string content to new MyString object.
@@ -138,7 +153,7 @@ MyString MyString::operator+(std::string &s) const
     return (*this).operator+(s.c_str());
 }
 
-/* 
+/*
  * Assignment with concatenate operator overloading with another MyString object. Uses _update_capacity_ function.
  * Build new null-terminated string with cstring functions and update current (*this) object.
  */
@@ -230,8 +245,8 @@ void MyString::clear()
     len_ = 0;
 }
 
-/* 
- * Main insert by index function. 
+/*
+ * Main insert by index function.
  * Inserts the received string at the specified index into the object string.
  * 1. First, a chunk up to the used index is copied to the new line.
  * 2. Then the string from the argument is added.
@@ -267,7 +282,7 @@ void MyString::insert(size_t index, size_t rep_times, const char sym)
     delete[] form_str;
 }
 
-/* 
+/*
  * Insert by index function with ``null-terminated string``, which size is elems_count.
  * Based on ``MyString::insert(size_t index, const char *str)``
  */
@@ -279,7 +294,7 @@ void MyString::insert(size_t index, const char *str, size_t elems_count)
     this->insert(index, form_str);
 }
 
-/* 
+/*
  * Insert by index function with ``std::string``.
  * Based on ``MyString::insert(size_t index, const char *str)``
  */
@@ -288,7 +303,7 @@ void MyString::insert(size_t index, std::string &str)
     this->insert(index, str.c_str());
 }
 
-/* 
+/*
  * Insert by index function with ``std::string``, which size is elems_count.
  * Based on ``MyString::insert(size_t index, const char *str)``
  */
@@ -297,8 +312,8 @@ void MyString::insert(size_t index, std::string &str, size_t elems_count)
     this->insert(index, std::string(str.begin(), str.begin() + elems_count).c_str());
 }
 
-/* 
- * Erase substr function. 
+/*
+ * Erase substr function.
  * Checks the count parameter to see if it is possible to remove that many characters. If not, clear() is called.
  * Otherwise, a set of actions is performed to copy data from the old string without the piece to be deleted
  * Updates the object properties (capacity does not change)
@@ -393,7 +408,7 @@ bool operator>=(const MyString &first_str, const MyString &second_str)
 
 /*
  * Input data stream operator overload.
- * Uses reading the entire stream over a buffer of size 4096 
+ * Uses reading the entire stream over a buffer of size 4096
  * bytes, adding each new chunk to the string
  */
 std::istream &operator>>(std::istream &in, MyString &src)
