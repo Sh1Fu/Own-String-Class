@@ -14,6 +14,7 @@ MyString::MyString(const char *s, size_t new_len)
     len_ = ((new_len == 0) ? (strlen(s)) : (new_len));
     cur_capacity_ = len_ + 1;
     str_ = new char[cur_capacity_];
+    memset(str_, 0, cur_capacity_);
     memcpy(str_, s, len_);
     str_[len_] = '\0';
 }
@@ -27,6 +28,7 @@ MyString::MyString(std::initializer_list<char> list)
     len_ = list.size();
     cur_capacity_ = len_ + 1;
     str_ = new char[cur_capacity_];
+    memset(str_, 0, cur_capacity_);
     size_t loop_index = 0;
     for (auto &element : list)
     {
@@ -51,6 +53,7 @@ MyString::MyString(int count, const char sym)
     len_ = count;
     cur_capacity_ = len_ + 1;
     str_ = new char[cur_capacity_];
+    memset(str_, 0, cur_capacity_);
     for (size_t index = 0; index < cur_capacity_; ++index)
     {
         str_[index] = sym;
@@ -66,6 +69,7 @@ MyString::MyString(const MyString &own_str)
     len_ = own_str_len;
     cur_capacity_ = len_ + 1;
     str_ = new char[cur_capacity_];
+    memset(str_, 0, cur_capacity_);
     for (size_t index = 0; index < len_; ++index)
     {
         str_[index] = own_str.str_[index];
@@ -128,6 +132,7 @@ MyString MyString::operator+(const char *str) const
 {
     size_t str_len = strlen(str), op_len = len_ + str_len;
     char *new_str = new char[op_len];
+    memset(new_str, 0, op_len + 1);
     strncpy(new_str, str_, len_);
     strncat(new_str, str, str_len);
     return MyString(new_str, op_len);
@@ -167,6 +172,7 @@ MyString &MyString::operator+=(MyString other_obj)
         _update_capacity_(predict_size);
     }
     char *new_str = new char[cur_capacity_];
+    memset(new_str, 0, cur_capacity_);
     strncpy(new_str, str_, len_);
     strncat(new_str, other_obj.str_, other_obj.len_);
     len_ += other_obj.len_;
@@ -293,6 +299,7 @@ void MyString::insert(size_t index, size_t rep_times, const char sym)
 void MyString::insert(size_t index, const char *str, size_t elems_count)
 {
     char *form_str = new char[elems_count + 1];
+    memset(form_str, 0, elems_count + 1);
     strncpy(form_str, str, elems_count);
     form_str[elems_count] = '\0';
     this->insert(index, form_str);
@@ -368,6 +375,7 @@ void MyString::append(size_t count, const char sym)
 void MyString::append(const char *str, size_t index, size_t count)
 {
     char *form_str = new char[count + 1];
+    memset(form_str, 0, count + 1); 
     str += index;
     strncpy(form_str, str, count);
     str -= index;
@@ -398,9 +406,10 @@ void MyString::replace(size_t index, size_t count, const char *str)
     size_t substr_len = strlen(str), offset = index + count;
     size_t new_len = len_ - count + substr_len;
     char *new_str = new char[new_len + 1];
-    strncpy(new_str, str_, index);
+    memset(new_str, 0, new_len + 1);
+    memcpy(new_str, str_, index);
     strncat(new_str, str, substr_len);
-    if (offset < len_)
+    if (offset <= len_)
     {
         str_ += offset;
         strncat(new_str, str_, (len_ - offset));
@@ -428,6 +437,7 @@ char *MyString::substr(size_t index)
 char *MyString::substr(size_t index, size_t count)
 {
     static char *substr_p = new char[count + 1];
+    memset(substr_p, 0, count + 1);
     substr_p = this->substr(index);
     substr_p[count] = '\0';
     return substr_p;
@@ -515,6 +525,7 @@ std::istream &operator>>(std::istream &in, MyString &src)
         else if (src.len_ == 0)
         {
             char *new_str = new char[part_len + 1];
+            memset(new_str, 0, part_len + 1);
             strncpy(new_str, buffer, part_len);
             new_str[part_len] = '\0';
             delete[] src.str_;
@@ -525,6 +536,7 @@ std::istream &operator>>(std::istream &in, MyString &src)
         else
         {
             char *new_str = new char[src.cur_capacity_ + (part_len * 2)];
+            memset(new_str, 0, src.cur_capacity_ + (part_len * 2));
             strncpy(new_str, src.str_, src.len_);
             strncat(new_str, buffer, part_len);
             new_str[src.len_ + part_len] = '\0';
