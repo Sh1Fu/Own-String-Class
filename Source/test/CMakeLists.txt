@@ -1,11 +1,10 @@
 project(Tests)
 
-add_executable(constructor_unittests constructor_unittests.cpp)
-target_link_libraries(constructor_unittests GTest::gtest_main MyString)
-
-add_executable(base_operator_unittests base_operator_unittests.cpp)
-target_link_libraries(base_operator_unittests GTest::gtest_main MyString)
-
 include(GoogleTest)
-add_test(constructor_gunittests constructor_unittests)
-add_test(base_operator_unittests base_operator_unittests)
+file(GLOB APP_SOURCES *.cpp)
+foreach (testsourcefile ${APP_SOURCES})
+    get_filename_component(testname ${testsourcefile} NAME_WLE)
+    add_executable(${testname} "${testname}.cpp")
+    target_link_libraries(${testname} GTest::gtest_main MyString)
+    add_test(${testname} ${testname})
+endforeach(file ${files})

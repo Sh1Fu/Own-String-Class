@@ -1,3 +1,4 @@
+#include <iostream>
 #include "../include/MyString.hpp"
 #include "gtest/gtest.h"
 

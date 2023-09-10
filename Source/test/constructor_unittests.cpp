@@ -91,17 +91,6 @@ int main(int argc, char *argv[])
 /*
 int main(int argc, char **argv)
 {
-
-    const char *ss = a1.c_str();
-    std::cout << ss << " " << strlen(ss) << " " << a1.size() << " " << a1.empty() << " " << a1.capacity() << std::endl;
-    a1.shrink_to_fit();
-    ss = a1.c_str();
-    std::cout << ss << " " << strlen(ss) << " " << a1.size() << " " << a1.empty() << " " << a1.capacity() << std::endl;
-    a1.clear();
-    a1.shrink_to_fit();
-    ss = a1.c_str();
-    std::cout << ss << " " << strlen(ss) << " " << a1.size() << " " << a1.empty() << " " << a1.capacity() << std::endl;
-
     MyString a9;
     std::cout << "Input Test" << std::endl << "Enter smth: ";
     std::cin >> a9;

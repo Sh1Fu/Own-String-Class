@@ -61,6 +61,7 @@ MyString::MyString(int count, const char sym)
 /* Base copy constructor */
 MyString::MyString(const MyString &own_str)
 {
+    assert(own_str != nullptr);
     size_t own_str_len = own_str.len_;
     len_ = own_str_len;
     cur_capacity_ = len_ + 1;
@@ -75,10 +76,8 @@ MyString::MyString(const MyString &own_str)
 /* Base destructor */
 MyString::~MyString(void)
 {
-    if (str_ != nullptr)
-    {
-        delete[] str_;
-    }
+    assert(str_ != nullptr);
+    delete[] str_;
 }
 
 /* Additional swap function. Needs to copy constructor and assignment operator overloading. */
@@ -106,19 +105,19 @@ MyString &MyString::operator=(MyString other_obj)
 /* Assignment operator overloading with std::string object. Based on ``.operator(MyString)`` */
 MyString &MyString::operator=(std::string &s)
 {
-    return (*this).operator=(MyString(s));
+    return this->operator=(MyString(s));
 }
 
 /* Assignment operator overloading with null-terminated string. Based on ``.operator(MyString)`` */
 MyString &MyString::operator=(const char *s)
 {
-    return (*this).operator=(MyString(s));
+    return this->operator=(MyString(s));
 }
 
 /* Assignment operator overloading with char value. Based on ``.operator(MyString)`` */
 MyString &MyString::operator=(const char sym)
 {
-    return (*this).operator=(MyString(1, sym));
+    return this->operator=(MyString(1, sym));
 }
 
 /*
@@ -140,8 +139,7 @@ MyString MyString::operator+(const char *str) const
  */
 MyString MyString::operator+(const MyString &other_obj) const
 {
-
-    return (*this).operator+(other_obj.str_);
+    return this->operator+(other_obj.str_);
 }
 
 /*
@@ -150,7 +148,7 @@ MyString MyString::operator+(const MyString &other_obj) const
  */
 MyString MyString::operator+(std::string &s) const
 {
-    return (*this).operator+(s.c_str());
+    return this->operator+(s.c_str());
 }
 
 /*
@@ -160,7 +158,7 @@ MyString MyString::operator+(std::string &s) const
 MyString &MyString::operator+=(MyString other_obj)
 {
     // MyString res;
-    // res = (*this).operator+(other_obj);
+    // res = this->operator+(other_obj);
     // swap(*this, res);
     // return *this;
     if (cur_capacity_ < other_obj.len_ + len_)
@@ -181,17 +179,17 @@ MyString &MyString::operator+=(MyString other_obj)
 /* Assignment with concatenate operator overloading with ``null-terminated string``. Based on ``.operator+=(MyString)``. */
 MyString &MyString::operator+=(const char *str)
 {
-    return (*this).operator+=(MyString(str));
+    return this->operator+=(MyString(str));
 }
 
 /* Assignment with concatenate operator overloading with ``std::string`` object. Based on ``.operator+=(MyString)``. */
 MyString &MyString::operator+=(std::string &str)
 {
-    return (*this).operator+=(MyString(str));
+    return this->operator+=(MyString(str));
 }
 
 /* Index operator overloading. Calculate index inside operator. Negative index are supported. */
-char &MyString::operator[](int index)
+char &MyString::operator[](long long int index)
 {
     size_t mod_index = (this->len_ + static_cast<ptrdiff_t>(index)) % this->len_;
     return this->str_[mod_index];
@@ -201,6 +199,11 @@ char &MyString::operator[](int index)
 const char *MyString::c_str()
 {
     return str_;
+}
+
+const char *MyString::data()
+{
+    return this->c_str();
 }
 
 /* Return current lenght of string without null-terminating symbol */
@@ -233,7 +236,7 @@ void MyString::shrink_to_fit()
     if (cur_capacity_ > len_)
     {
         assert(strlen(str_) == len_);
-        MyString tmp((*this).str_);
+        MyString tmp(this->str_);
         swap(*this, tmp);
     }
 }
@@ -255,6 +258,7 @@ void MyString::clear()
  */
 void MyString::insert(size_t index, const char *str)
 {
+    assert(str != nullptr);
     size_t str_len = strlen(str), new_size = (cur_capacity_ <= index ? cur_capacity_ + str_len + 1 : cur_capacity_ + str_len);
     char *new_str = new char[new_size];
     memset(new_str, 0, new_size);
@@ -364,7 +368,9 @@ void MyString::append(size_t count, const char sym)
 void MyString::append(const char *str, size_t index, size_t count)
 {
     char *form_str = new char[count + 1];
+    str += index;
     strncpy(form_str, str, count);
+    str -= index;
     form_str[count] = '\0';
     this->_append_(form_str, index, true);
 }
@@ -378,7 +384,80 @@ void MyString::append(std::string &str) noexcept
 /* append function with ``std::string`` object, which size is ``count``. Based on main append function */
 void MyString::append(std::string &str, size_t index, size_t count) noexcept
 {
-    this->_append_(std::string(str.begin(), str.begin() + count).c_str(), index, true);
+    this->_append_(std::string(str.begin() + index, str.begin() + index + count).c_str(), index, true);
+}
+
+/*
+ * Main replace function.
+ * Take null-terminated string and try to paste it into object's string
+ * Update all object value (but not capacity).
+ */
+void MyString::replace(size_t index, size_t count, const char *str)
+{
+    assert(str != nullptr);
+    size_t substr_len = strlen(str), offset = index + count;
+    size_t new_len = len_ - count + substr_len;
+    char *new_str = new char[new_len + 1];
+    strncpy(new_str, str_, index);
+    strncat(new_str, str, substr_len);
+    if (offset < len_)
+    {
+        str_ += offset;
+        strncat(new_str, str_, (len_ - offset));
+        str_ -= offset;
+    }
+    delete[] str_;
+    str_ = new_str;
+    len_ = new_len;
+    _update_capacity_(new_len);
+}
+
+/* Replace function with ``std::string`` object. Based on ``MyString::replace(size_t index, size_t count, const char *str)`` */
+void MyString::replace(size_t index, size_t count, std::string &str)
+{
+    this->replace(index, count, str.c_str());
+}
+
+/* Base substr function. Concatenate pointer with ``index`` and returns it. */
+char *MyString::substr(size_t index)
+{
+    return str_ + index;
+}
+
+/* Substr function. Based on ``MyString::substr(size_t index)`` and cut off function's result string  */
+char *MyString::substr(size_t index, size_t count)
+{
+    static char *substr_p = new char[count + 1];
+    substr_p = this->substr(index);
+    substr_p[count] = '\0';
+    return substr_p;
+}
+
+/* Find substr in object's string. Returns index of substr start. Uses ``strstr`` */
+size_t MyString::find(const char *str)
+{
+    return strstr(str_, str) - str_;
+}
+
+/*
+ * Find substr in object's string. Returns index of substr start. Uses ``strstr``
+ * Moves ``str_`` to ``index`` bytes and calls ``strstr``
+ */
+size_t MyString::find(const char *str, size_t index)
+{
+    return strstr(str_ + index, str) - str_;
+}
+
+/* Find function with ``std::string`` object. Based on ``MyString::find(const char *str)`` */
+size_t MyString::find(std::string &str)
+{
+    return this->find(str.c_str());
+}
+
+/* Find function with ``std::string`` object. Based on ``MyString::find(const char *str, size_t index)`` */
+size_t MyString::find(std::string &str, size_t index)
+{
+    return this->find(str.c_str(), index);
 }
 
 /* Comparison operator overload */

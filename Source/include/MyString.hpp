@@ -49,7 +49,7 @@ public:
     MyString &operator+=(std::string &str);
 
     /* Index operator overloading */
-    char &operator[](int index);
+    char &operator[](long long index);
 
     /*
      * Lexicographically comparing operators overloading.
@@ -65,6 +65,7 @@ public:
 
     /* Methods of returning class properties */
     const char *c_str();
+    const char *data();
     size_t lenght();
     size_t size();
     bool empty();
