@@ -1,4 +1,5 @@
-add_subdirectory("src")
+project(OwnStringCode)
 
-add_executable(main main.cpp)
-target_link_libraries(main MyString)
+include_directories(include)
+add_subdirectory(src build/src)
+add_subdirectory(test build/test)

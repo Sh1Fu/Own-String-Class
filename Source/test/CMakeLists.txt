@@ -1,0 +1,11 @@
+project(Tests)
+
+add_executable(constructor_unittests constructor_unittests.cpp)
+target_link_libraries(constructor_unittests GTest::gtest_main MyString)
+
+add_executable(base_operator_unittests base_operator_unittests.cpp)
+target_link_libraries(base_operator_unittests GTest::gtest_main MyString)
+
+include(GoogleTest)
+add_test(constructor_gunittests constructor_unittests)
+add_test(base_operator_unittests base_operator_unittests)
