@@ -9,14 +9,15 @@
 class MyString
 {
 protected:
-    size_t len_;                                 /* Count of symbols (length of string) in string */
-    size_t cur_capacity_;                        /* Current capacity of string.
-                                                  * The variable may not be equal to the length of the string if,
-                                                  * for example, there is an increase in string length
-                                                  */
-    char *str_;                                  /* Pointer to string in memory*/
-    void swap(MyString &, MyString &);           /* Additional copy-memory function */
-    void _update_capacity_(size_t predict_size); /* Additional function to update capacity value thanks by math stuff */
+    size_t len_;                                                   /* Count of symbols (length of string) in string */
+    size_t cur_capacity_;                                          /* Current capacity of string.
+                                                                    * The variable may not be equal to the length of the string if,
+                                                                    * for example, there is an increase in string length
+                                                                    */
+    char *str_;                                                    /* Pointer to string in memory*/
+    void swap(MyString &, MyString &);                             /* Additional copy-memory function */
+    void _update_capacity_(size_t predict_size);                   /* Additional function to update capacity value thanks by math stuff */
+    void _append_(const char *str, size_t index, bool with_index); /* Main append function with all parameters. This is base function for mostly append functions. */
 
 public:
     /*
@@ -82,10 +83,10 @@ public:
     void erase(size_t index, size_t count);
 
     /* Modified append method with different data types*/
-    void append(const char *str, size_t index = 0, size_t unsued = 0, bool with_index = false);
+    void append(const char *str);
     void append(size_t count, const char sym);
     void append(const char *str, size_t index, size_t count);
-    void append(std::string &str, size_t index = 0) noexcept;
+    void append(std::string &str) noexcept;
     void append(std::string &str, size_t index, size_t count) noexcept;
 
     /* Replace method overloading */

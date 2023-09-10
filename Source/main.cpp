@@ -75,9 +75,8 @@ int main(int argc, char **argv)
     std::cout << a11 << std::endl;
     a11.append(s2);
     std::cout << a11 << std::endl;
-    //a11.append("HELLO WORLD", 0, 2);
-
-
-    
-
+    a11.append("HELLO WORLD", 0, 2);
+    std::cout << a11 << std::endl;
+    a11.append(s1, 4, 4);
+    std::cout << a11 << std::endl;
 }

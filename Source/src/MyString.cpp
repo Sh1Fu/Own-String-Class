@@ -18,8 +18,8 @@ MyString::MyString(const char *s, size_t new_len)
     str_[len_] = '\0';
 }
 
-/* 
- * list-based constructor. Calls ``Mystring::Mystring(const char *s)`` 
+/*
+ * list-based constructor. Calls ``Mystring::Mystring(const char *s)``
  * Redesigned because of new standards and new compilers. Now ``std::initializer_list`` class is used
  */
 MyString::MyString(std::initializer_list<char> list)
@@ -28,7 +28,7 @@ MyString::MyString(std::initializer_list<char> list)
     cur_capacity_ = len_ + 1;
     str_ = new char[cur_capacity_];
     size_t loop_index = 0;
-    for (auto & element : list)
+    for (auto &element : list)
     {
         str_[loop_index] = element;
         ++loop_index;
@@ -342,10 +342,16 @@ void MyString::erase(size_t index, size_t count)
 }
 
 /* Main append function. Based on insert by index function */
-void MyString::append(const char *str, size_t index, size_t unsued, bool with_index)
+void MyString::_append_(const char *str, size_t index, bool with_index)
 {
     size_t act_index = (with_index ? index : len_);
     this->insert(act_index, str, strlen(str));
+}
+
+/* Classical append function with null-terminated string. */
+void MyString::append(const char *str)
+{
+    this->_append_(str, 0, false);
 }
 
 /* append function. Based on insert by index function */
@@ -360,19 +366,19 @@ void MyString::append(const char *str, size_t index, size_t count)
     char *form_str = new char[count + 1];
     strncpy(form_str, str, count);
     form_str[count] = '\0';
-    this->append(form_str, index, 0, true);
+    this->_append_(form_str, index, true);
 }
 
 /* append function with ``std::string`` object. Based on main append function */
-void MyString::append(std::string &str, size_t index) noexcept
+void MyString::append(std::string &str) noexcept
 {
-    this->append(str.c_str(), index, 0, false);
+    this->_append_(str.c_str(), 0, false);
 }
 
 /* append function with ``std::string`` object, which size is ``count``. Based on main append function */
 void MyString::append(std::string &str, size_t index, size_t count) noexcept
 {
-    this->append(std::string(str.begin(), str.begin() + count).c_str(), index, 0, true);
+    this->_append_(std::string(str.begin(), str.begin() + count).c_str(), index, true);
 }
 
 /* Comparison operator overload */
