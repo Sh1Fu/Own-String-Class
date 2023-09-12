@@ -586,42 +586,38 @@ std::istream &operator>>(std::istream &in, MyString &src)
     char buffer[4096];
     memset(buffer, 0, 4096);
     size_t part_len = 0;
+    bool empty_by_default = (src.len_ == 0 ? true : false);
     while (in.get(buffer, sizeof(buffer), '\n'))
     {
         char *pos_newline = strchr(buffer, '\n');
-        bool has_newline = (pos_newline != nullptr);
-        (has_newline ? (buffer[buffer - pos_newline] = '\0') : NULL);
+        ((pos_newline != nullptr) ? (buffer[buffer - pos_newline] = '\0') : NULL);
         part_len = strlen(buffer);
+        size_t new_size = (empty_by_default ? part_len + 1 : src.cur_capacity_ + (part_len * 2));
+        char *new_str = new char[new_size];
+        memset(new_str, 0, new_size);
         if ((src.cur_capacity_ - part_len) > 0 && src.str_ != nullptr)
         {
             strncat(src.str_, buffer, part_len);
             src.len_ += part_len;
         }
-        else if (src.len_ == 0)
+        else if (empty_by_default)
         {
-            char *new_str = new char[part_len + 1];
-            memset(new_str, 0, part_len + 1);
             strncpy(new_str, buffer, part_len);
             new_str[part_len] = '\0';
-            delete[] src.str_;
-            src.str_ = new_str;
-            src.len_ = part_len;
-            src.cur_capacity_ = src.len_ + 1;
         }
         else
         {
-            char *new_str = new char[src.cur_capacity_ + (part_len * 2)];
-            memset(new_str, 0, src.cur_capacity_ + (part_len * 2));
             strncpy(new_str, src.str_, src.len_);
             strncat(new_str, buffer, part_len);
             new_str[src.len_ + part_len] = '\0';
-            delete[] src.str_;
-            src.str_ = new_str;
-            src.len_ = strlen(src.str_);
-            src.cur_capacity_ = src.len_ + 1;
         }
+        delete[] src.str_;
+        src.str_ = new_str;
+        src.len_ = strlen(src.str_);
+        src.cur_capacity_ = src.len_ + 1;
+
         memset(buffer, 0, part_len);
-        if (has_newline)
+        if (pos_newline != nullptr)
             break;
     }
     return in;
