@@ -1,5 +1,50 @@
 #include "MyString.hpp"
 
+/* Additional swap function. Needs to copy constructor and assignment operator overloading. */
+void MyString::_swap_(MyString &first, MyString &second)
+{
+    using std::swap;
+    swap(first.len_, second.len_);
+    swap(first.str_, second.str_);
+    swap(first.cur_capacity_, second.cur_capacity_);
+}
+
+void MyString::_copy_(const MyString &second)
+{
+    assert(second.str_ != nullptr);
+    if (this->str_ != nullptr)
+        delete[] this->str_;
+    this->len_ = second.len_;
+    this->cur_capacity_ = second.cur_capacity_;
+    this->str_ = new char[this->cur_capacity_];
+    memset(this->str_, 0, this->cur_capacity_);
+    for (size_t index = 0; index < this->len_; ++index)
+    {
+        this->str_[index] = second.str_[index];
+    }
+    this->str_[len_] = '\0';
+}
+
+/* Private function. Own impement of strrev function from string.h */
+void MyString::_reverse_()
+{
+    size_t start = 0, end = this->len_ - 1;
+    while (start < end)
+    {
+        char temp = this->str_[start];
+        this->str_[start] = this->str_[end];
+        this->str_[end] = temp;
+        end--;
+        start++;
+    }
+}
+
+/* Updating capacity, using alignment of the allocated block in memory */
+void MyString::_update_capacity_(size_t predict_size)
+{
+    this->cur_capacity_ = sizeof(size_t) * (static_cast<size_t>(predict_size / sizeof(size_t)) + 1); // Implemented only to show the functionality of capacity and shrink_to_fit
+}
+
 /* Default constructor. Init new string as nullptr with len = 0 */
 MyString::MyString(void)
 {
@@ -9,9 +54,9 @@ MyString::MyString(void)
 }
 
 /* Base constructor. Copy const char content to new ``MyString`` object */
-MyString::MyString(const char *s, size_t new_len)
+MyString::MyString(const char *s, size_t new_len) : MyString()
 {
-    len_ = ((new_len == 0) ? (strlen(s)) : (new_len));
+    len_ = ((new_len == 0 && s != nullptr) ? (strlen(s)) : (new_len));
     cur_capacity_ = len_ + 1;
     str_ = new char[cur_capacity_];
     memset(str_, 0, cur_capacity_);
@@ -23,7 +68,7 @@ MyString::MyString(const char *s, size_t new_len)
  * list-based constructor. Calls ``Mystring::Mystring(const char *s)``
  * Redesigned because of new standards and new compilers. Now ``std::initializer_list`` class is used
  */
-MyString::MyString(std::initializer_list<char> list)
+MyString::MyString(std::initializer_list<char> list) : MyString()
 {
     len_ = list.size();
     cur_capacity_ = len_ + 1;
@@ -48,61 +93,40 @@ MyString::MyString(std::string &s) : MyString(s.c_str(), s.size()) {}
 MyString::MyString(const char *s, int count) : MyString(s, static_cast<size_t>(count)) {}
 
 /* Constructor to copy <sym> to string ``count`` times */
-MyString::MyString(int count, const char sym)
+MyString::MyString(int count, const char sym) : MyString()
 {
     len_ = count;
     cur_capacity_ = len_ + 1;
     str_ = new char[cur_capacity_];
-    memset(str_, 0, cur_capacity_);
-    for (size_t index = 0; index < cur_capacity_; ++index)
-    {
-        str_[index] = sym;
-    }
-    str_[len_] = '\0';
+    memset(str_, sym, count);
+    str_[count] = '\0';
+}
+
+/* Move constructor. Based on copy constructor*/
+MyString::MyString(MyString &&other_object) : MyString()
+{
+    *this = std::move(other_object);
 }
 
 /* Base copy constructor */
-MyString::MyString(const MyString &own_str)
+MyString::MyString(const MyString &own_str) : MyString()
 {
-    assert(own_str != nullptr);
-    size_t own_str_len = own_str.len_;
-    len_ = own_str_len;
-    cur_capacity_ = len_ + 1;
-    str_ = new char[cur_capacity_];
-    memset(str_, 0, cur_capacity_);
-    for (size_t index = 0; index < len_; ++index)
-    {
-        str_[index] = own_str.str_[index];
-    }
-    str_[len_] = '\0';
+    _copy_(own_str);
 }
 
 /* Base destructor */
 MyString::~MyString(void)
 {
-    assert(str_ != nullptr);
-    delete[] str_;
-}
-
-/* Additional swap function. Needs to copy constructor and assignment operator overloading. */
-void MyString::swap(MyString &first, MyString &second)
-{
-    using std::swap;
-    swap(first.len_, second.len_);
-    swap(first.str_, second.str_);
-    swap(first.cur_capacity_, second.cur_capacity_);
-}
-
-/* Updating capacity, using alignment of the allocated block in memory */
-void MyString::_update_capacity_(size_t predict_size)
-{
-    this->cur_capacity_ = sizeof(size_t) * (static_cast<size_t>(predict_size / sizeof(size_t)) + 1); // Implemented only to show the functionality of capacity and shrink_to_fit
+    if (str_ != nullptr)
+    {
+        delete[] str_;
+    }
 }
 
 /* Assignment operator overloading. Copy all data fields from other object to current*/
-MyString &MyString::operator=(MyString other_obj)
+MyString &MyString::operator=(const MyString &other_obj)
 {
-    swap(*this, other_obj);
+    _copy_(other_obj);
     return *this;
 }
 
@@ -122,6 +146,26 @@ MyString &MyString::operator=(const char *s)
 MyString &MyString::operator=(const char sym)
 {
     return this->operator=(MyString(1, sym));
+}
+
+/// @brief Move assgnment operator. Uses private swap function likewise move constructor
+/// @param other_obj
+/// @return pointer to current object. ``*this``
+MyString &MyString::operator=(MyString &&other_obj)
+{
+    if (this != &other_obj)
+    {
+        delete[] this->str_;
+
+        this->str_ = other_obj.str_;
+        this->len_ = other_obj.len_;
+        this->cur_capacity_ = other_obj.cur_capacity_;
+
+        other_obj.str_ = nullptr;
+        other_obj.len_ = 0;
+        other_obj.cur_capacity_ = 0;
+    }
+    return *this;
 }
 
 /*
@@ -164,7 +208,7 @@ MyString &MyString::operator+=(MyString other_obj)
 {
     // MyString res;
     // res = this->operator+(other_obj);
-    // swap(*this, res);
+    // _swap_(*this, res);
     // return *this;
     if (cur_capacity_ < other_obj.len_ + len_)
     {
@@ -243,7 +287,7 @@ void MyString::shrink_to_fit()
     {
         assert(strlen(str_) == len_);
         MyString tmp(this->str_);
-        swap(*this, tmp);
+        _swap_(*this, tmp);
     }
 }
 
@@ -265,18 +309,27 @@ void MyString::clear()
 void MyString::insert(size_t index, const char *str)
 {
     assert(str != nullptr);
-    size_t str_len = strlen(str), new_size = (cur_capacity_ <= index ? cur_capacity_ + str_len + 1 : cur_capacity_ + str_len);
+    if (index > this->len_ + 1)
+        throw std::out_of_range("Current index more than string's len");
+    size_t act_index = ((index > this->len_ + 1) ? this->len_ : index);
+    size_t str_len = strlen(str), new_size = (cur_capacity_ <= act_index ? cur_capacity_ + str_len + 1 : cur_capacity_ + str_len);
     char *new_str = new char[new_size];
     memset(new_str, 0, new_size);
 
-    strncpy(new_str, str_, index);
+    strncpy(new_str, str_, act_index);
     strncat(new_str, str, str_len);
+    try
+    {
+        str_ += act_index;
+        strncat(new_str, str_, len_ - act_index);
+        str_ -= act_index;
+    }
+    catch (const std::exception &e)
+    {
+        throw e.what();
+    }
 
-    str_ += index;
-    strncat(new_str, str_, len_ - index);
-    str_ -= index;
     delete[] str_;
-
     str_ = new_str;
     len_ = strlen(new_str);
     _update_capacity_(new_size);
@@ -331,6 +384,9 @@ void MyString::insert(size_t index, std::string &str, size_t elems_count)
  */
 void MyString::erase(size_t index, size_t count)
 {
+    size_t hole_size = (index + count);
+    if (hole_size > this->len_)
+        throw std::out_of_range("Current delete size more than a string's part");
     size_t new_len = ((count > (len_ - index + 1)) ? (index) : (len_ - count));
     if (new_len <= 0)
     {
@@ -341,10 +397,10 @@ void MyString::erase(size_t index, size_t count)
     memset(new_str, 0, new_len + 1);
 
     strncpy(new_str, str_, index);
-    size_t hole_size = (index + count);
     str_ += hole_size;
     strncat(new_str, str_, len_ - hole_size);
     str_ -= hole_size;
+
     delete[] str_;
 
     str_ = new_str;
@@ -375,7 +431,7 @@ void MyString::append(size_t count, const char sym)
 void MyString::append(const char *str, size_t index, size_t count)
 {
     char *form_str = new char[count + 1];
-    memset(form_str, 0, count + 1); 
+    memset(form_str, 0, count + 1);
     str += index;
     strncpy(form_str, str, count);
     str -= index;
@@ -402,20 +458,30 @@ void MyString::append(std::string &str, size_t index, size_t count) noexcept
  */
 void MyString::replace(size_t index, size_t count, const char *str)
 {
+    if (index >= this->len_)
+        throw std::out_of_range("Current index is more than string's len");
     assert(str != nullptr);
     size_t substr_len = strlen(str), offset = index + count;
     size_t new_len = len_ - count + substr_len;
-    char *new_str = new char[new_len + 1];
-    memset(new_str, 0, new_len + 1);
-    memcpy(new_str, str_, index);
-    strncat(new_str, str, substr_len);
-    if (offset <= len_)
+    char *new_str;
+    try
     {
-        str_ += offset;
-        strncat(new_str, str_, (len_ - offset));
-        str_ -= offset;
+        new_str = new char[new_len + 1];
+        memset(new_str, 0, new_len + 1);
+        memcpy(new_str, str_, index);
+        strncat(new_str, str, substr_len);
+        if (offset <= len_)
+        {
+            str_ += offset;
+            strncat(new_str, str_, (len_ - offset));
+            str_ -= offset;
+        }
+        delete[] str_;
     }
-    delete[] str_;
+    catch (const std::exception &e)
+    {
+        throw e.what();
+    }
     str_ = new_str;
     len_ = new_len;
     _update_capacity_(new_len);
@@ -430,7 +496,16 @@ void MyString::replace(size_t index, size_t count, std::string &str)
 /* Base substr function. Concatenate pointer with ``index`` and returns it. */
 char *MyString::substr(size_t index)
 {
-    return str_ + index;
+    if (index > this->len_)
+        throw std::out_of_range("Current index more than string's len");
+    try
+    {
+        return str_ + index;
+    }
+    catch (const std::exception &e)
+    {
+        throw e.what();
+    }
 }
 
 /* Substr function. Based on ``MyString::substr(size_t index)`` and cut off function's result string  */

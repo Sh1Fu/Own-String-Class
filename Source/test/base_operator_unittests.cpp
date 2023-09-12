@@ -102,6 +102,14 @@ TEST(AssignmentOperator, WithCharSym)
     EXPECT_EQ(2, a1.capacity());
 }
 
+TEST(AssignmentOperator, MoveAssignment)
+{
+    MyString a1, a2;
+    a1 = MyString("Hello");
+    a2 = std::move(a1);
+    ASSERT_EQ(a1.c_str(), nullptr);
+}
+
 TEST(AssignmentWithConcatenateOperator, WithObject)
 {
     MyString a1("Hello "), a2("World");

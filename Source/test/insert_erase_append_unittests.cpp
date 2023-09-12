@@ -1,3 +1,4 @@
+#include <exception>
 #include "../include/MyString.hpp"
 #include "gtest/gtest.h"
 
@@ -32,6 +33,12 @@ TEST(InsertTests, insert_stdstring)
     EXPECT_STREQ(obj.c_str(), "a@@@@@aaaa");
 }
 
+TEST(InsertTests, insert_throw)
+{
+    MyString obj("Hello world");
+    ASSERT_THROW(obj.insert(50, "STR"), std::out_of_range);
+}
+
 TEST(InsertTests, insert_part_stdstring)
 {
     std::string ss = "@@@@@";
@@ -45,6 +52,12 @@ TEST(EraseTest, erase)
     MyString obj("Hello World!");
     obj.erase(5, 6);
     EXPECT_STREQ(obj.c_str(), "Hello!");
+}
+
+TEST(EraseTest, erase_throw)
+{
+    MyString obj = "Hello World";
+    ASSERT_THROW(obj.erase(50, 50), std::out_of_range);
 }
 
 TEST(AppendTests, append_char)

@@ -1,3 +1,4 @@
+#include <exception>
 #include "../include/MyString.hpp"
 #include "gtest/gtest.h"
 
@@ -19,6 +20,12 @@ TEST(ReplaceTests, replace_stdstring)
     ss = "ShiFu";
     obj.replace(16, 5, ss);
     ASSERT_STREQ(obj.c_str(), "hello wonderful ShiFu");
+}
+
+TEST(ReplaceTests, replace_throw)
+{
+    MyString obj = "Hello World";
+    ASSERT_THROW(obj.replace(11, 50, "HELLO"), std::out_of_range);
 }
 
 int main(int argc, char *argv[])

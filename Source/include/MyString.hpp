@@ -1,11 +1,15 @@
 #ifndef _MYSTRING_H_
 #define _MYSTRING_H_
 #include <cstring>
+#include <string.h>
 #include <iostream>
 #include <stdint.h>
-#include <cstdlib>
 #include <cassert>
 #include <initializer_list>
+#include <exception>
+#include <concepts>
+#include <cmath>
+#include <fstream>
 class MyString
 {
 protected:
@@ -15,9 +19,13 @@ protected:
                                                                     * for example, there is an increase in string length
                                                                     */
     char *str_;                                                    /* Pointer to string in memory*/
-    void swap(MyString &, MyString &);                             /* Additional copy-memory function */
+    void _swap_(MyString &, MyString &);                           /* Additional copy-memory function */
+    void _copy_(const MyString &);                                 /* Private copy function to copy all values from some object*/
     void _update_capacity_(size_t predict_size);                   /* Additional function to update capacity value thanks by math stuff */
     void _append_(const char *str, size_t index, bool with_index); /* Main append function with all parameters. This is base function for mostly append functions. */
+    void _reverse_();                                              /* Reverse object's string */
+    template <class T>
+    void _itoa_(T num, int base); /* Private itoa implement */
 
 public:
     /*
@@ -30,13 +38,17 @@ public:
     MyString(const char *str, int elems_count);
     MyString(int rep_times, const char sym);
     MyString(const MyString &other_obj);
+    MyString(MyString &&other_object);
+    template <typename T, class = typename std::enable_if<std::is_integral<T>::value || std::is_floating_point<T>::value>::type>
+    MyString(T possible_int);
     ~MyString(void);
 
     /* Assignment operator overloading with different data types */
-    MyString &operator=(MyString other_obj);
+    MyString &operator=(const MyString &other_obj);
     MyString &operator=(std::string &str);
     MyString &operator=(const char *str);
     MyString &operator=(const char sym);
+    MyString &operator=(MyString &&other_obj);
 
     /* Concatenate operator overloading with different data types */
     MyString operator+(const MyString &other_obj) const;
@@ -49,7 +61,7 @@ public:
     MyString &operator+=(std::string &str);
 
     /* Index operator overloading */
-    char &operator[](long long index);
+    char &operator[](long long int index);
 
     /*
      * Lexicographically comparing operators overloading.
@@ -107,5 +119,8 @@ public:
     /* Input and Output stream overloading as friend function */
     friend std::istream &operator>>(std::istream &in, MyString &src);
     friend std::ostream &operator<<(std::ostream &out, const MyString &src);
+    friend std::ifstream &operator>>(std::ifstream &in, MyString &src);
+    friend std::ofstream &operator<<(std::ofstream &out, const MyString &src);
 };
+#include "MyString.ipp"
 #endif
