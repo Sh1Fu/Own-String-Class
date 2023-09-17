@@ -1,15 +1,16 @@
 #ifndef _MYSTRING_H_
 #define _MYSTRING_H_
 #include <cstring>
-#include <string.h>
 #include <iostream>
-#include <stdint.h>
 #include <cassert>
 #include <initializer_list>
 #include <exception>
 #include <concepts>
 #include <cmath>
 #include <fstream>
+#include <cstdlib>
+
+/// @brief Изменить систему выделения памяти. Сделать большой упор на cur_capacity_.
 class MyString
 {
 protected:
@@ -22,6 +23,7 @@ protected:
     void _swap_(MyString &, MyString &);                           /* Additional copy-memory function */
     void _copy_(const MyString &);                                 /* Private copy function to copy all values from some object*/
     void _update_capacity_(size_t predict_size);                   /* Additional function to update capacity value thanks by math stuff */
+    bool _check_buf_size_(size_t add_size);                        /* Capacity value check */
     void _append_(const char *str, size_t index, bool with_index); /* Main append function with all parameters. This is base function for mostly append functions. */
     void _reverse_();                                              /* Reverse object's string */
     template <class T>
@@ -61,7 +63,7 @@ public:
     MyString &operator+=(std::string &str);
 
     /* Index operator overloading */
-    char &operator[](long long int index);
+    char &operator[](long long int index) const;
 
     /*
      * Lexicographically comparing operators overloading.
@@ -76,12 +78,12 @@ public:
     friend bool operator<=(const MyString &first_object, const MyString &second_object);
 
     /* Methods of returning class properties */
-    const char *c_str();
-    const char *data();
-    size_t lenght();
-    size_t size();
-    bool empty();
-    size_t capacity();
+    const char *c_str() const;
+    const char *data() const;
+    size_t lenght() const;
+    size_t size() const;
+    bool empty() const;
+    size_t capacity() const;
     void shrink_to_fit();
     void clear();
 
@@ -99,16 +101,25 @@ public:
     void append(const char *str);
     void append(size_t count, const char sym);
     void append(const char *str, size_t index, size_t count);
-    void append(std::string &str) noexcept;
-    void append(std::string &str, size_t index, size_t count) noexcept;
+    void append(std::string &str);
+    void append(std::string &str, size_t index, size_t count);
 
     /* Replace method overloading */
     void replace(size_t index, size_t count, const char *str);
     void replace(size_t index, size_t count, std::string &str);
 
+    /* "At" method likewise .operator[] */
+    char &at(size_t index);
+
+    /* Integer conversions */
+    template <typename T, class = typename std::enable_if<std::is_integral<T>::value>::type>
+    decltype(auto) to_int(T unused = 0);
+    template <typename T, class = typename std::enable_if<std::is_floating_point<T>::value>::type>
+    decltype(auto) to_float(T unused = 0);
+
     /* Substr method overloading */
-    char *substr(size_t index);
-    char *substr(size_t index, size_t count);
+    MyString substr(size_t index);
+    MyString substr(size_t index, size_t count);
 
     /* Find method overloading */
     size_t find(const char *str);

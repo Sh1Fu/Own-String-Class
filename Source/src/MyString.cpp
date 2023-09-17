@@ -45,6 +45,12 @@ void MyString::_update_capacity_(size_t predict_size)
     this->cur_capacity_ = sizeof(size_t) * (static_cast<size_t>(predict_size / sizeof(size_t)) + 1); // Implemented only to show the functionality of capacity and shrink_to_fit
 }
 
+/* Return true if current buffer size is avaliable to add some data. */
+bool MyString::_check_buf_size_(size_t add_size)
+{
+    return (cur_capacity_ >= len_ + add_size);
+}
+
 /* Default constructor. Init new string as nullptr with len = 0 */
 MyString::MyString(void)
 {
@@ -206,23 +212,25 @@ MyString MyString::operator+(std::string &s) const
  */
 MyString &MyString::operator+=(MyString other_obj)
 {
-    // MyString res;
-    // res = this->operator+(other_obj);
-    // _swap_(*this, res);
-    // return *this;
-    if (cur_capacity_ < other_obj.len_ + len_)
+    // /* TODO Free invalid pointer */
+    char *tmp = str_;
+    size_t predict = other_obj.len_ + len_;
+    if(cur_capacity_ < predict)
     {
-        size_t predict_size = cur_capacity_ + other_obj.len_;
-        _update_capacity_(predict_size);
+        _update_capacity_(predict);
+        char *str = new char[cur_capacity_];
+        memset(str, 0, cur_capacity_);
+        strncpy(str, str_, len_);
+        strncat(str, other_obj.str_, other_obj.len_);
+        str[predict] = '\0';
+        str_ = str;
     }
-    char *new_str = new char[cur_capacity_];
-    memset(new_str, 0, cur_capacity_);
-    strncpy(new_str, str_, len_);
-    strncat(new_str, other_obj.str_, other_obj.len_);
-    len_ += other_obj.len_;
-    new_str[len_] = '\0';
-    delete[] str_;
-    str_ = new_str;
+    else
+    {
+        strncat(str_, other_obj.str_, other_obj.len_);
+    }
+    len_ = predict;
+    //delete[] tmp;
     return *this;
 }
 
@@ -239,43 +247,43 @@ MyString &MyString::operator+=(std::string &str)
 }
 
 /* Index operator overloading. Calculate index inside operator. Negative index are supported. */
-char &MyString::operator[](long long int index)
+char &MyString::operator[](long long int index) const
 {
     size_t mod_index = (this->len_ + static_cast<ptrdiff_t>(index)) % this->len_;
     return this->str_[mod_index];
 }
 
 /* Null-terminated string pointer return function */
-const char *MyString::c_str()
+const char *MyString::c_str() const
 {
     return str_;
 }
 
-const char *MyString::data()
+const char *MyString::data() const
 {
     return this->c_str();
 }
 
 /* Return current lenght of string without null-terminating symbol */
-size_t MyString::lenght()
+size_t MyString::lenght() const
 {
     return len_;
 }
 
 /* Returns current size of string without null-terminating symbol */
-size_t MyString::size()
+size_t MyString::size() const
 {
     return len_;
 }
 
 /* Returns true if current string size eq to zero (string is empty). */
-bool MyString::empty()
+bool MyString::empty() const
 {
     return (len_ == 0 ? true : false);
 }
 
 /* Returns string capacity value. */
-size_t MyString::capacity()
+size_t MyString::capacity() const
 {
     return cur_capacity_;
 }
@@ -283,7 +291,7 @@ size_t MyString::capacity()
 /* Reduce string memory allocation size. Create new MyString obj, swap it with (*this) object. */
 void MyString::shrink_to_fit()
 {
-    if (cur_capacity_ > len_)
+    if (cur_capacity_ > len_ && str_ != nullptr)
     {
         assert(strlen(str_) == len_);
         MyString tmp(this->str_);
@@ -308,31 +316,7 @@ void MyString::clear()
  */
 void MyString::insert(size_t index, const char *str)
 {
-    assert(str != nullptr);
-    if (index > this->len_ + 1)
-        throw std::out_of_range("Current index more than string's len");
-    size_t act_index = ((index > this->len_ + 1) ? this->len_ : index);
-    size_t str_len = strlen(str), new_size = (cur_capacity_ <= act_index ? cur_capacity_ + str_len + 1 : cur_capacity_ + str_len);
-    char *new_str = new char[new_size];
-    memset(new_str, 0, new_size);
-
-    strncpy(new_str, str_, act_index);
-    strncat(new_str, str, str_len);
-    try
-    {
-        str_ += act_index;
-        strncat(new_str, str_, len_ - act_index);
-        str_ -= act_index;
-    }
-    catch (const std::exception &e)
-    {
-        throw e.what();
-    }
-
-    delete[] str_;
-    str_ = new_str;
-    len_ = strlen(new_str);
-    _update_capacity_(new_size);
+    this->insert(index, str, strlen(str));
 }
 
 /* Insert by index function. Based on ``MyString::insert(size_t index, const char *str)`` */
@@ -341,7 +325,7 @@ void MyString::insert(size_t index, size_t rep_times, const char sym)
     char *form_str = new char[rep_times + 1];
     memset(form_str, sym, rep_times);
     form_str[rep_times] = '\0';
-    this->insert(index, form_str);
+    this->insert(index, form_str, strlen(form_str));
     delete[] form_str;
 }
 
@@ -351,11 +335,29 @@ void MyString::insert(size_t index, size_t rep_times, const char sym)
  */
 void MyString::insert(size_t index, const char *str, size_t elems_count)
 {
-    char *form_str = new char[elems_count + 1];
-    memset(form_str, 0, elems_count + 1);
-    strncpy(form_str, str, elems_count);
-    form_str[elems_count] = '\0';
-    this->insert(index, form_str);
+    if (index > cur_capacity_)
+        throw std::out_of_range("Current index more than string's len");
+    assert(str != nullptr);
+    size_t act_index = ((index > this->len_ + 1) ? this->len_ : index);
+    if (!_check_buf_size_(elems_count))
+    {
+        _update_capacity_(elems_count + len_ + 1);
+    }
+    char *new_str = new char[cur_capacity_];
+    memset(new_str, 0, cur_capacity_);
+    strncpy(new_str, str_, act_index);
+    strncat(new_str, str, elems_count);
+    try
+    {
+        strncat(new_str, str_ + act_index, len_ - act_index);
+    }
+    catch (const std::exception &e)
+    {
+        throw e.what();
+    }
+    delete[] str_;
+    str_ = new_str;
+    len_ = strlen(new_str);
 }
 
 /*
@@ -395,17 +397,11 @@ void MyString::erase(size_t index, size_t count)
     }
     char *new_str = new char[new_len + 1];
     memset(new_str, 0, new_len + 1);
-
     strncpy(new_str, str_, index);
-    str_ += hole_size;
-    strncat(new_str, str_, len_ - hole_size);
-    str_ -= hole_size;
-
+    strncat(new_str, str_ + hole_size, len_ - hole_size);
     delete[] str_;
-
     str_ = new_str;
     len_ = new_len;
-    cur_capacity_ = len_ + 1;
 }
 
 /* Main append function. Based on insert by index function */
@@ -431,22 +427,20 @@ void MyString::append(size_t count, const char sym)
 void MyString::append(const char *str, size_t index, size_t count)
 {
     char *form_str = new char[count + 1];
-    memset(form_str, 0, count + 1);
-    str += index;
-    strncpy(form_str, str, count);
-    str -= index;
+    memcpy(form_str, str + index, count);
     form_str[count] = '\0';
     this->_append_(form_str, index, true);
+    delete[] form_str;
 }
 
 /* append function with ``std::string`` object. Based on main append function */
-void MyString::append(std::string &str) noexcept
+void MyString::append(std::string &str)
 {
     this->_append_(str.c_str(), 0, false);
 }
 
 /* append function with ``std::string`` object, which size is ``count``. Based on main append function */
-void MyString::append(std::string &str, size_t index, size_t count) noexcept
+void MyString::append(std::string &str, size_t index, size_t count)
 {
     this->_append_(std::string(str.begin() + index, str.begin() + index + count).c_str(), index, true);
 }
@@ -458,33 +452,12 @@ void MyString::append(std::string &str, size_t index, size_t count) noexcept
  */
 void MyString::replace(size_t index, size_t count, const char *str)
 {
-    if (index >= this->len_)
+    if (index >= cur_capacity_)
         throw std::out_of_range("Current index is more than string's len");
     assert(str != nullptr);
-    size_t substr_len = strlen(str), offset = index + count;
-    size_t new_len = len_ - count + substr_len;
-    char *new_str;
-    try
-    {
-        new_str = new char[new_len + 1];
-        memset(new_str, 0, new_len + 1);
-        memcpy(new_str, str_, index);
-        strncat(new_str, str, substr_len);
-        if (offset <= len_)
-        {
-            str_ += offset;
-            strncat(new_str, str_, (len_ - offset));
-            str_ -= offset;
-        }
-        delete[] str_;
-    }
-    catch (const std::exception &e)
-    {
-        throw e.what();
-    }
-    str_ = new_str;
-    len_ = new_len;
-    _update_capacity_(new_len);
+    size_t act_index = (index > len_ ? 0 : index);
+    this->erase(act_index, count);
+    this->insert(act_index, str);
 }
 
 /* Replace function with ``std::string`` object. Based on ``MyString::replace(size_t index, size_t count, const char *str)`` */
@@ -493,14 +466,20 @@ void MyString::replace(size_t index, size_t count, std::string &str)
     this->replace(index, count, str.c_str());
 }
 
+/* At method impementation. Based on ``.operator[]`` */
+char &MyString::at(size_t index)
+{
+    return this->str_[index];
+}
+
 /* Base substr function. Concatenate pointer with ``index`` and returns it. */
-char *MyString::substr(size_t index)
+MyString MyString::substr(size_t index)
 {
     if (index > this->len_)
         throw std::out_of_range("Current index more than string's len");
     try
     {
-        return str_ + index;
+        return MyString(str_ + index);
     }
     catch (const std::exception &e)
     {
@@ -509,13 +488,9 @@ char *MyString::substr(size_t index)
 }
 
 /* Substr function. Based on ``MyString::substr(size_t index)`` and cut off function's result string  */
-char *MyString::substr(size_t index, size_t count)
+MyString MyString::substr(size_t index, size_t count)
 {
-    static char *substr_p = new char[count + 1];
-    memset(substr_p, 0, count + 1);
-    substr_p = this->substr(index);
-    substr_p[count] = '\0';
-    return substr_p;
+    return MyString(this->substr(index).c_str(), count);
 }
 
 /* Find substr in object's string. Returns index of substr start. Uses ``strstr`` */
@@ -581,46 +556,16 @@ bool operator>=(const MyString &first_str, const MyString &second_str)
  * Uses reading the entire stream over a buffer of size 4096
  * bytes, adding each new chunk to the string
  */
-std::istream &operator>>(std::istream &in, MyString &src)
+std::istream &operator>>(std::istream &input, MyString &src)
 {
-    char buffer[4096];
-    memset(buffer, 0, 4096);
-    size_t part_len = 0;
-    bool empty_by_default = (src.len_ == 0 ? true : false);
-    while (in.get(buffer, sizeof(buffer), '\n'))
+    char *p = new char[2];
+    memset(p, 0, 2);
+    while ((*p = input.get()) != '\n' && !input.eof())
     {
-        char *pos_newline = strchr(buffer, '\n');
-        ((pos_newline != nullptr) ? (buffer[buffer - pos_newline] = '\0') : NULL);
-        part_len = strlen(buffer);
-        size_t new_size = (empty_by_default ? part_len + 1 : src.cur_capacity_ + (part_len * 2));
-        char *new_str = new char[new_size];
-        memset(new_str, 0, new_size);
-        if ((src.cur_capacity_ - part_len) > 0 && src.str_ != nullptr)
-        {
-            strncat(src.str_, buffer, part_len);
-            src.len_ += part_len;
-        }
-        else if (empty_by_default)
-        {
-            strncpy(new_str, buffer, part_len);
-            new_str[part_len] = '\0';
-        }
-        else
-        {
-            strncpy(new_str, src.str_, src.len_);
-            strncat(new_str, buffer, part_len);
-            new_str[src.len_ + part_len] = '\0';
-        }
-        delete[] src.str_;
-        src.str_ = new_str;
-        src.len_ = strlen(src.str_);
-        src.cur_capacity_ = src.len_ + 1;
-
-        memset(buffer, 0, part_len);
-        if (pos_newline != nullptr)
-            break;
+        src += p;
+        memset(p, 0, 2);
     }
-    return in;
+    return input;
 }
 
 /* Standard output operator overloading */
