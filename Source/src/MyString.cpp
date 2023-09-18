@@ -40,9 +40,9 @@ void MyString::_reverse_()
 }
 
 /* Updating capacity, using alignment of the allocated block in memory */
-void MyString::_update_capacity_(size_t predict_size)
+size_t MyString::_update_capacity_(size_t predict_size)
 {
-    this->cur_capacity_ = sizeof(size_t) * (static_cast<size_t>(predict_size / sizeof(size_t)) + 1); // Implemented only to show the functionality of capacity and shrink_to_fit
+    return sizeof(size_t) * (static_cast<size_t>(predict_size / sizeof(size_t)) + 1); // Implemented only to show the functionality of capacity and shrink_to_fit
 }
 
 /* Return true if current buffer size is avaliable to add some data. */
@@ -213,18 +213,18 @@ MyString MyString::operator+(std::string &s) const
 MyString &MyString::operator+=(MyString other_obj)
 {
     size_t predict = other_obj.len_ + len_;
-    if (cur_capacity_ < predict)
+    size_t new_capac = _update_capacity_(predict);
+    if (cur_capacity_ < (predict + 1))
     {
-        _update_capacity_(predict);
-        char *str = new char[cur_capacity_];
-        memset(str, 0, cur_capacity_);
+        char *str = new char[new_capac];
+        memset(str, 0, new_capac);
         strncpy(str, str_, len_);
         strncat(str, other_obj.str_, other_obj.len_);
-        str[predict] = '\0';
         // Free invalid pointer without shrink_to_fit function. Source: https://shorturl.at/kzI79
-        this->shrink_to_fit();
+        //this->shrink_to_fit();
         delete[] str_;
         str_ = str;
+        cur_capacity_ = new_capac;
     }
     else
     {
@@ -341,7 +341,7 @@ void MyString::insert(size_t index, const char *str, size_t elems_count)
     size_t act_index = ((index > this->len_ + 1) ? this->len_ : index);
     if (!_check_buf_size_(elems_count))
     {
-        _update_capacity_(elems_count + len_ + 1);
+        cur_capacity_ = _update_capacity_(elems_count + len_ + 1);
     }
     char *new_str = new char[cur_capacity_];
     memset(new_str, 0, cur_capacity_);

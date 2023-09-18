@@ -22,7 +22,7 @@ protected:
     char *str_;                                                    /* Pointer to string in memory*/
     void _swap_(MyString &, MyString &);                           /* Additional copy-memory function */
     void _copy_(const MyString &);                                 /* Private copy function to copy all values from some object*/
-    void _update_capacity_(size_t predict_size);                   /* Additional function to update capacity value thanks by math stuff */
+    size_t _update_capacity_(size_t predict_size);                   /* Additional function to update capacity value thanks by math stuff */
     bool _check_buf_size_(size_t add_size);                        /* Capacity value check */
     void _append_(const char *str, size_t index, bool with_index); /* Main append function with all parameters. This is base function for mostly append functions. */
     void _reverse_();                                              /* Reverse object's string */
