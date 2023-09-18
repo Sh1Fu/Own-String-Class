@@ -212,10 +212,8 @@ MyString MyString::operator+(std::string &s) const
  */
 MyString &MyString::operator+=(MyString other_obj)
 {
-    // /* TODO Free invalid pointer */
-    char *tmp = str_;
     size_t predict = other_obj.len_ + len_;
-    if(cur_capacity_ < predict)
+    if (cur_capacity_ < predict)
     {
         _update_capacity_(predict);
         char *str = new char[cur_capacity_];
@@ -223,6 +221,9 @@ MyString &MyString::operator+=(MyString other_obj)
         strncpy(str, str_, len_);
         strncat(str, other_obj.str_, other_obj.len_);
         str[predict] = '\0';
+        // Free invalid pointer without shrink_to_fit function. Source: https://shorturl.at/kzI79
+        this->shrink_to_fit();
+        delete[] str_;
         str_ = str;
     }
     else
@@ -230,7 +231,6 @@ MyString &MyString::operator+=(MyString other_obj)
         strncat(str_, other_obj.str_, other_obj.len_);
     }
     len_ = predict;
-    //delete[] tmp;
     return *this;
 }
 
@@ -573,4 +573,19 @@ std::ostream &operator<<(std::ostream &out, const MyString &src)
 {
     out << src.str_;
     return out;
+}
+
+std::ifstream &operator>>(std::ifstream &in, MyString &src)
+{
+    std::streamsize buffer_size = in.tellg();
+    in.seekg(0, std::ios::beg);
+    if (buffer_size <= 0)
+        throw "File not found error.";
+    char *buf = new char[buffer_size];
+    in.read(buf, buffer_size);
+    if (!in)
+    {
+        std::cerr << "Error reading file, could only read " << in.gcount() << " bytes" << std::endl;
+    }
+    return in;
 }
