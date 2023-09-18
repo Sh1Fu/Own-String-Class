@@ -1,3 +1,4 @@
+#include "MyString.hpp"
 
 /* Template implementation of itoa function. Uses to convert integral types to object's string. */
 template <class T>
@@ -58,4 +59,16 @@ MyString::MyString(T possible_int) : MyString()
         size_t new_int = static_cast<size_t>(possible_int);
         this->_itoa_(new_int, 10);
     }
+}
+
+template <typename T, class>
+inline decltype(auto) MyString::to_int(T unsued)
+{
+    return static_cast<T>(atoi(this->str_));
+}
+
+template <typename T, class>
+inline decltype(auto) MyString::to_float(T unused)
+{
+    return static_cast<T>(atof(this->str_));
 }
