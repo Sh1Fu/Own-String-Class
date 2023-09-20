@@ -5,8 +5,8 @@ int main()
 {
     MyString a(1000, 'a');
     MyString b;
-    //b = "123";
-    //a = b;
+    b = "123";
+    a = b;
     a.clear();
     a.insert(3, "***", 2);
     a.insert(500, 1100, 'a');

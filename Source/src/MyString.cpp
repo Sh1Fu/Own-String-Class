@@ -15,7 +15,8 @@ void MyString::_copy_(const MyString &second)
     if (this->str_ != nullptr)
         delete[] this->str_;
     this->len_ = second.len_;
-    this->cur_capacity_ = second.cur_capacity_;
+    if (cur_capacity_ < second.cur_capacity_)
+        this->cur_capacity_ = second.cur_capacity_;
     this->str_ = new char[this->cur_capacity_];
     memset(this->str_, 0, this->cur_capacity_);
     for (size_t index = 0; index < this->len_; ++index)
