@@ -76,6 +76,24 @@ TEST(CheckAdditionalMethods, clear)
     ASSERT_STREQ(obj.c_str(), "");
 }
 
+TEST(CheckAtMethod, at)
+{
+    MyString obj("ldjkfhiuwey9f823yucd89o2und98NNU9N81ND;LJK;SDJNP9U3*@)(#!*)!(@ur(*!j))");
+    ASSERT_EQ('@', obj.at(52));
+}
+
+TEST(CheckIntegerConversions, to_int)
+{
+    MyString obj(213);
+    ASSERT_EQ(213, obj.to_int<short int>());
+}
+
+TEST(CheckIntegerConversions, to_float)
+{
+    MyString obj(0.051231);
+    ASSERT_EQ(0.051231, obj.to_float<double>());
+}
+
 int main(int argc, char *argv[])
 {
     ::testing::InitGoogleTest(&argc, argv);
