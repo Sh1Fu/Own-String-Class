@@ -57,12 +57,12 @@ TEST(StreamOperators, input)
 
 // TEST(StreamOperators, input_file)
 // {
-//     std::ifstream test("test.in", std::ios::in);
-//     std::string except;
-//     test >> except;
-//     MyString obj;
-//     test >> obj;
-//     EXPECT_STREQ(obj.c_str(), except.c_str());
+    // std::ifstream test("test.in", std::ios::in);
+    // std::string except;
+    // test >> except;
+    // MyString obj;
+    // test >> obj;
+    // EXPECT_STREQ(obj.c_str(), except.c_str());
 // }
 
 TEST(StreamOperators, output)
