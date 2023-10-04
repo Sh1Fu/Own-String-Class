@@ -10,7 +10,6 @@
 #include <fstream>
 #include <cstdlib>
 
-/// @brief Изменить систему выделения памяти. Сделать большой упор на cur_capacity_.
 class MyString
 {
 protected:
@@ -22,7 +21,7 @@ protected:
     char *str_;                                                    /* Pointer to string in memory*/
     void _swap_(MyString &, MyString &);                           /* Additional copy-memory function */
     void _copy_(const MyString &);                                 /* Private copy function to copy all values from some object*/
-    size_t _update_capacity_(size_t predict_size);                   /* Additional function to update capacity value thanks by math stuff */
+    size_t _update_capacity_(size_t predict_size);                 /* Additional function to update capacity value thanks by math stuff */
     bool _check_buf_size_(size_t add_size);                        /* Capacity value check */
     void _append_(const char *str, size_t index, bool with_index); /* Main append function with all parameters. This is base function for mostly append functions. */
     void _reverse_();                                              /* Reverse object's string */
@@ -112,10 +111,24 @@ public:
     char &at(size_t index);
 
     /* Integer conversions */
-    template <typename T, class = typename std::enable_if<std::is_integral<T>::value>::type>
-    decltype(auto) to_int(T unused = 0);
-    template <typename T, class = typename std::enable_if<std::is_floating_point<T>::value>::type>
-    decltype(auto) to_float(T unused = 0);
+    struct int_converter
+    {
+        char *buffer;
+        template <typename T, class>
+        operator T();
+    };
+
+    /* Floating point type conversion */
+    struct floating_converter
+    {
+        char *buffer;
+        template <typename T, class>
+        operator T();
+    };
+
+    /* Integral type conversion */
+    int_converter to_int();
+    floating_converter to_float();
 
     /* Substr method overloading */
     MyString substr(size_t index);

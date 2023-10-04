@@ -590,3 +590,15 @@ std::ifstream &operator>>(std::ifstream &in, MyString &src)
     }
     return in;
 }
+
+/* Convert string to integral types (char, short, int, long long)*/
+MyString::int_converter MyString::to_int()
+{
+    return {this->str_};
+}
+
+/* Converting string to floating types (float, double) */
+MyString::floating_converter MyString::to_float()
+{
+    return {this->str_};
+}

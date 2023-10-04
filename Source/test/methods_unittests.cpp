@@ -85,13 +85,15 @@ TEST(CheckAtMethod, at)
 TEST(CheckIntegerConversions, to_int)
 {
     MyString obj(213);
-    ASSERT_EQ(213, obj.to_int<short int>());
+    char fobj = obj.to_int();
+    ASSERT_EQ(static_cast<char>(213), (fobj));
 }
 
 TEST(CheckIntegerConversions, to_float)
 {
     MyString obj(0.051231);
-    ASSERT_EQ(0.051231, obj.to_float<double>());
+    float fobj = obj.to_float();
+    EXPECT_EQ(static_cast<float>(0.051231), (fobj));
 }
 
 int main(int argc, char *argv[])
