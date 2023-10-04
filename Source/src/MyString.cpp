@@ -578,17 +578,25 @@ std::ostream &operator<<(std::ostream &out, const MyString &src)
 
 std::ifstream &operator>>(std::ifstream &in, MyString &src)
 {
-    std::streamsize buffer_size = in.tellg();
+    in.seekg(0, std::ios::end);
+    size_t file_size = in.tellg();
     in.seekg(0, std::ios::beg);
-    if (buffer_size <= 0)
-        throw "File not found error.";
-    char *buf = new char[buffer_size];
-    in.read(buf, buffer_size);
-    if (!in)
-    {
-        std::cerr << "Error reading file, could only read " << in.gcount() << " bytes" << std::endl;
-    }
+    bool flag = false;
+    if (src.cur_capacity_  <= file_size + 1) flag = true;
+    if (flag)
+        src.str_ = new char[file_size + 1];
+    in.getline(src.str_, file_size + 1);
+    src.len_ = strlen(src.str_);
+    if (flag)
+        src.cur_capacity_ = src.len_ + 1;
+    src.str_[file_size] = '\0';
     return in;
+}
+
+std::ofstream &operator<<(std::ofstream &out, const MyString &src)
+{
+    out << src.str_;
+    return out;
 }
 
 /* Convert string to integral types (char, short, int, long long)*/
