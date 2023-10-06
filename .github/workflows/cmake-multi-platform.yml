@@ -32,15 +32,14 @@ jobs:
           - os: ubuntu-latest
             c_compiler: gcc
             cpp_compiler: g++
+            gcc: ${{matrix.gcc_verion}}
           - os: ubuntu-latest
             c_compiler: clang
             cpp_compiler: clang++
+            clang: ${{matrix.clang_version}}
 
     steps:
     - uses: actions/checkout@v3
-    - uses: actions/setup-node@v3
-      with: 
-        node-version: ${{matrix.version}}
 
     - name: Set reusable strings
       # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
