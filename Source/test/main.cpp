@@ -1,5 +1,6 @@
 #include "MyString.hpp"
 #include <iostream>
+using namespace str;
 
 int main()
 {

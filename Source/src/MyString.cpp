@@ -1,4 +1,5 @@
 #include "MyString.hpp"
+using namespace str;
 
 /* Additional swap function. Needs to copy constructor and assignment operator overloading. */
 void MyString::_swap_(MyString &first, MyString &second)
@@ -222,7 +223,7 @@ MyString &MyString::operator+=(MyString other_obj)
         strncpy(str, str_, len_);
         strncat(str, other_obj.str_, other_obj.len_);
         // Free invalid pointer without shrink_to_fit function. Source: https://shorturl.at/kzI79
-        //this->shrink_to_fit();
+        // this->shrink_to_fit();
         delete[] str_;
         str_ = str;
         cur_capacity_ = new_capac;
@@ -521,33 +522,40 @@ size_t MyString::find(std::string &str, size_t index)
     return this->find(str.c_str(), index);
 }
 
+std::vector<size_t> str::MyString::find(std::vector<char *> &strs)
+{
+    struct str::AhoTrie new_find;
+    new_find.init(strs);
+    return new_find.process_string(this->str_);
+}
+
 /* Comparison operator overload */
-bool operator==(const MyString &first_str, const MyString &second_str)
+bool str::operator==(const MyString &first_str, const MyString &second_str)
 {
     return (strcmp(first_str.str_, second_str.str_) == 0);
 }
 
-bool operator<(const MyString &first_str, const MyString &second_str)
+bool str::operator<(const MyString &first_str, const MyString &second_str)
 {
     return (strcmp(first_str.str_, second_str.str_) < 0);
 }
 
-bool operator!=(const MyString &first_str, const MyString &second_str)
+bool str::operator!=(const MyString &first_str, const MyString &second_str)
 {
     return !(first_str == second_str);
 }
 
-bool operator>(const MyString &first_str, const MyString &second_str)
+bool str::operator>(const MyString &first_str, const MyString &second_str)
 {
     return !(first_str == second_str) && !(first_str < second_str);
 }
 
-bool operator<=(const MyString &first_str, const MyString &second_str)
+bool str::operator<=(const MyString &first_str, const MyString &second_str)
 {
     return first_str < second_str || first_str == second_str;
 }
 
-bool operator>=(const MyString &first_str, const MyString &second_str)
+bool str::operator>=(const MyString &first_str, const MyString &second_str)
 {
     return !(first_str < second_str);
 }
@@ -557,7 +565,7 @@ bool operator>=(const MyString &first_str, const MyString &second_str)
  * Uses reading the entire stream over a buffer of size 4096
  * bytes, adding each new chunk to the string
  */
-std::istream &operator>>(std::istream &input, MyString &src)
+std::istream &str::operator>>(std::istream &input, MyString &src)
 {
     char *p = new char[2];
     memset(p, 0, 2);
@@ -570,23 +578,144 @@ std::istream &operator>>(std::istream &input, MyString &src)
 }
 
 /* Standard output operator overloading */
-std::ostream &operator<<(std::ostream &out, const MyString &src)
+std::ostream &str::operator<<(std::ostream &out, const MyString &src)
 {
     out << src.str_;
     return out;
 }
 
-std::ifstream &operator>>(std::ifstream &in, MyString &src)
+std::ifstream &str::operator>>(std::ifstream &in, MyString &src)
 {
-    std::streamsize buffer_size = in.tellg();
+    in.seekg(0, std::ios::end);
+    size_t file_size = in.tellg();
     in.seekg(0, std::ios::beg);
-    if (buffer_size <= 0)
-        throw "File not found error.";
-    char *buf = new char[buffer_size];
-    in.read(buf, buffer_size);
-    if (!in)
-    {
-        std::cerr << "Error reading file, could only read " << in.gcount() << " bytes" << std::endl;
-    }
+    bool flag = false;
+    if (src.cur_capacity_ <= file_size + 1)
+        flag = true;
+    if (flag)
+        src.str_ = new char[file_size + 1];
+    in.getline(src.str_, file_size + 1);
+    src.len_ = strlen(src.str_);
+    if (flag)
+        src.cur_capacity_ = src.len_ + 1;
+    src.str_[file_size] = '\0';
     return in;
+}
+
+std::ofstream &str::operator<<(std::ofstream &out, const MyString &src)
+{
+    out.write(src.c_str(), src.size());
+    return out;
+}
+
+/* Convert string to integral types (char, short, int, long long)*/
+str::int_converter MyString::to_int()
+{
+    return {this->str_};
+}
+
+/* Converting string to floating types (float, double) */
+str::floating_converter MyString::to_float()
+{
+    return {this->str_};
+}
+
+str::AhoTrie::AhoTrie()
+{
+    nodes.resize(1);
+    root = &nodes[0];
+}
+
+void str::AhoTrie::init(std::vector<char *> &strs)
+{
+    num_terminals = strs.size();
+    for (int i = 0; i < (int)strs.size(); i++)
+    {
+        char *new_s = strs[i];
+        Node *cur_node = root;
+        for (size_t i = 0; i < strlen(new_s); i++)
+        {
+            if (cur_node->arcs.count(new_s[i]) == 0)
+            {
+                nodes.push_back(Node());
+                cur_node->arcs[new_s[i]] = &nodes.back();
+            }
+            cur_node = cur_node->arcs[new_s[i]];
+        }
+        cur_node->terminals.push_back(i);
+        terminal_nodes.push_back(cur_node); // Mark the node reached by this string as terminal
+    }
+
+    // Next initialize the links with BFS
+    std::vector<Node *> front;
+    for (std::pair<char, Node *> cp : root->arcs)
+    { // Process root separately
+        cp.second->link = root;
+        front.push_back(cp.second); // Initialize the queue
+    }
+    for (int i = 0; i < (int)front.size(); i++)
+    {
+        Node *cur_node = front[i];
+        for (std::pair<char, Node *> cp : cur_node->arcs)
+        { // Iterate over all arcs
+            char c = cp.first;
+            Node *next = cp.second;
+            Node *link = cur_node->link;
+
+            while (link != 0 && link->arcs.count(c) == 0)
+            {                      // While we can't add c to suffix
+                link = link->link; // Move to smaller suffix
+            }
+            if (link == 0)
+                link = root; // Character not matched
+            else
+                link = link->arcs[c];
+
+            next->link = link;
+            front.push_back(next);
+        }
+    }
+}
+
+std::vector<size_t> str::AhoTrie::process_string(char *s)
+{
+    Node *cur_node = root;
+    for (size_t i = 0; i < strlen(s); i++)
+    {
+        while (cur_node != 0 && cur_node->arcs.count(s[i]) == 0)
+        {                              // If no arc allows for this character
+            cur_node = cur_node->link; // Move to smaller suffix
+        }
+        if (cur_node == 0)
+            cur_node = root; // Character not matched
+        else
+            cur_node = cur_node->arcs[s[i]];
+
+        cur_node->count++;
+    }
+
+    std::vector<Node *> front(1, root); // First do BFS to find a depth-based ordering of nodes
+    for (int i = 0; i < (int)front.size(); i++)
+    {
+        for (std::pair<char, Node *> cp : front[i]->arcs)
+        {
+            front.push_back(cp.second);
+        }
+    }
+    for (int i = (int)front.size() - 1; i > 0; i--)
+    { // Traverse the trie in reverse order of depth
+        if (front[i]->link != 0)
+        {
+            // If a string is matched, then so are all its suffixes
+            front[i]->link->count += front[i]->count; // Send the counts up the links
+        }
+    }
+
+    std::vector<size_t> result(num_terminals, 0); // Go through the 'dictionary', count occurrences
+    for (size_t i = 0; i < num_terminals; i++)
+    {
+        result[i] = terminal_nodes[i]->count;
+    }
+
+    return result;
 }

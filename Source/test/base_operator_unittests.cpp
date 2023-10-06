@@ -1,6 +1,7 @@
 #include <iostream>
 #include "../include/MyString.hpp"
 #include "gtest/gtest.h"
+using namespace str;
 
 TEST(BaseOperatorOverloading, ObjectsConcatenate)
 {

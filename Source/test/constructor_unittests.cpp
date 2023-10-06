@@ -1,6 +1,7 @@
 #include <vector>
 #include "../include/MyString.hpp"
 #include "gtest/gtest.h"
+using namespace str;
 
 TEST(ConstructorTests, Basic)
 {

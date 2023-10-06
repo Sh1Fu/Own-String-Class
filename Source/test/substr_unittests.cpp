@@ -1,6 +1,7 @@
 #include <exception>
 #include "../include/MyString.hpp"
 #include "gtest/gtest.h"
+using namespace str;
 
 TEST(SubstrTests, substr_index)
 {

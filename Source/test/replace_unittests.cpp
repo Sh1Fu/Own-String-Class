@@ -1,6 +1,7 @@
 #include <exception>
 #include "../include/MyString.hpp"
 #include "gtest/gtest.h"
+using namespace str;
 
 TEST(ReplaceTests, replace_nullterminated)
 {
