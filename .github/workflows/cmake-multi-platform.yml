@@ -26,7 +26,8 @@ jobs:
         os: [ubuntu-latest]
         build_type: [Release]
         c_compiler: [gcc, clang]
-        version: [10, 12, 14]
+        gcc_verion: [9, 11, 13]
+        clang_version: [10, 16]
         include:
           - os: ubuntu-latest
             c_compiler: gcc
