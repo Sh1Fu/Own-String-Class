@@ -32,11 +32,11 @@ jobs:
           - os: ubuntu-latest
             c_compiler: gcc
             cpp_compiler: g++
-            gcc: ${{matrix.gcc_verion}}
+            gcc: ${{gcc_verion}}
           - os: ubuntu-latest
             c_compiler: clang
             cpp_compiler: clang++
-            clang: ${{matrix.clang_version}}
+            clang: ${{clang_version}}
 
     steps:
     - uses: actions/checkout@v3
