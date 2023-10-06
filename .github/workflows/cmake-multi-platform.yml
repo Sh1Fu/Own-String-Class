@@ -26,6 +26,7 @@ jobs:
         os: [ubuntu-latest]
         build_type: [Release]
         c_compiler: [gcc, clang]
+        version: [10, 12, 14]
         include:
           - os: ubuntu-latest
             c_compiler: gcc
@@ -36,6 +37,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with: 
+        node-version: ${{matrix.version}}
 
     - name: Set reusable strings
       # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
