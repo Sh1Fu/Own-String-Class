@@ -1,6 +1,7 @@
 #include <exception>
 #include "../include/MyString.hpp"
 #include "gtest/gtest.h"
+using namespace str;
 
 TEST(InsertTests, insert_with_char)
 {

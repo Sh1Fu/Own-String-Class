@@ -1,4 +1,5 @@
 #include "MyString.hpp"
+using namespace str;
 
 /* Template implementation of itoa function. Uses to convert integral types to object's string. */
 template <class T>
@@ -62,13 +63,13 @@ MyString::MyString(T possible_int) : MyString()
 }
 
 template<typename T, class = typename std::enable_if<std::is_integral<T>::value>::type>
-inline MyString::int_converter::operator T()
+inline  str::int_converter::operator T() const
 {
     return static_cast<T>(atoi(buffer));
 }
 
 template<typename T, class = typename std::enable_if<std::is_floating_point<T>::value>::type>
-inline MyString::floating_converter::operator T()
+inline str::floating_converter::operator T()  const
 {
     return static_cast<T>(atof(buffer));
 }

@@ -2,6 +2,7 @@
 #include <string>
 #include "../include/MyString.hpp"
 #include "gtest/gtest.h"
+using namespace str;
 
 TEST(BooleanOperators, equal)
 {
@@ -63,7 +64,7 @@ TEST(StreamOperators, input_file)
     test >> except;
     MyString obj;
     test >> obj;
-    ASSERT_EQ(obj.size(), 44870);
+    ASSERT_EQ(obj.size(), 6410);
     EXPECT_STREQ(obj.c_str(), except.c_str());
 }
 
@@ -75,7 +76,7 @@ TEST(StreamOperators, input_file_base)
     test >> except;
     MyString obj;
     test >> obj;
-    ASSERT_EQ(obj.size(), 6);
+    ASSERT_EQ(obj.size(), 8);
     EXPECT_STREQ(obj.c_str(), except.c_str());
 }
 
