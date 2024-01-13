@@ -26,13 +26,17 @@ jobs:
         os: [ubuntu-latest]
         build_type: [Release]
         c_compiler: [gcc, clang]
+        gcc_verion: [9, 11, 13]
+        clang_version: [10, 16]
         include:
           - os: ubuntu-latest
             c_compiler: gcc
             cpp_compiler: g++
+            gcc: ${{gcc_verion}}
           - os: ubuntu-latest
             c_compiler: clang
             cpp_compiler: clang++
+            clang: ${{clang_version}}
 
     steps:
     - uses: actions/checkout@v3
