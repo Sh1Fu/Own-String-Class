@@ -1,5 +1,6 @@
 #include "../include/MyString.hpp"
 #include "gtest/gtest.h"
+#include <string>
 using namespace str;
 
 TEST(FindTests, find_nullterminated)
@@ -39,8 +40,9 @@ TEST(FindTests, find_string_index)
 TEST(FindTests, find_aho)
 {
     MyString a1 = "ahishers";
-    std::vector<char *> strs = {"he", "she", "hers", "his"};
-    std::vector<size_t> result = a1.find(strs);
+    std::vector<std::string> strs = {"he", "she", "his"};
+    std::vector<size_t> result;
+    a1.find(strs, result);
     for(size_t i = 0; i < 3; i++)
     {
         EXPECT_EQ(result[i], a1.find(strs[i]) + 1);

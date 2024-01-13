@@ -522,11 +522,11 @@ size_t MyString::find(std::string &str, size_t index)
     return this->find(str.c_str(), index);
 }
 
-std::vector<size_t> str::MyString::find(std::vector<char *> &strs)
+void str::MyString::find(std::vector<std::string> &strs, std::vector<size_t> &result)
 {
-    struct str::AhoTrie new_find;
-    new_find.init(strs);
-    return new_find.process_string(this->str_);
+    AhoCorasick ac(strs);
+    result = ac.find(*this);
+    return;
 }
 
 /* Comparison operator overload */
@@ -584,29 +584,29 @@ std::ostream &str::operator<<(std::ostream &out, const MyString &src)
     return out;
 }
 
-std::ifstream &str::operator>>(std::ifstream &in, MyString &src)
-{
-    in.seekg(0, std::ios::end);
-    size_t file_size = in.tellg();
-    in.seekg(0, std::ios::beg);
-    bool flag = false;
-    if (src.cur_capacity_ <= file_size + 1)
-        flag = true;
-    if (flag)
-        src.str_ = new char[file_size + 1];
-    in.getline(src.str_, file_size + 1);
-    src.len_ = strlen(src.str_);
-    if (flag)
-        src.cur_capacity_ = src.len_ + 1;
-    src.str_[file_size] = '\0';
-    return in;
-}
-
-std::ofstream &str::operator<<(std::ofstream &out, const MyString &src)
-{
-    out.write(src.c_str(), src.size());
-    return out;
-}
+//std::ifstream &str::operator>>(std::ifstream &in, MyString &src)
+//{
+//    in.seekg(0, std::ios::end);
+//    size_t file_size = in.tellg();
+//    in.seekg(0, std::ios::beg);
+//    bool flag = false;
+//    if (src.cur_capacity_ <= file_size + 1)
+//        flag = true;
+//    if (flag)
+//        src.str_ = new char[file_size + 1];
+//    in.getline(src.str_, file_size + 1);
+//    src.len_ = strlen(src.str_);
+//    if (flag)
+//        src.cur_capacity_ = src.len_ + 1;
+//    src.str_[file_size] = '\0';
+//    return in;
+//}
+//
+//std::ofstream &str::operator<<(std::ofstream &out, const MyString &src)
+//{
+//    out.write(src.c_str(), src.size());
+//    return out;
+//}
 
 /* Convert string to integral types (char, short, int, long long)*/
 str::int_converter MyString::to_int()
@@ -620,102 +620,125 @@ str::floating_converter MyString::to_float()
     return {this->str_};
 }
 
-str::AhoTrie::AhoTrie()
+str::AhoCorasick::~AhoCorasick()
 {
-    nodes.resize(1);
-    root = &nodes[0];
+    if (this->root != nullptr)
+        delete[] this->root;
 }
 
-void str::AhoTrie::init(std::vector<char *> &strs)
+std::vector<size_t> str::AhoCorasick::find(str::MyString &current_string)
 {
-    num_terminals = strs.size();
-    for (int i = 0; i < (int)strs.size(); i++)
+    std::vector<size_t> result;
+    TrieNode *curr = root;
+    const char *text = current_string.c_str();
+    for (size_t i = 0; i < current_string.lenght(); i++)
     {
-        char *new_s = strs[i];
-        Node *cur_node = root;
-        for (size_t i = 0; i < strlen(new_s); i++)
+        while (curr != root && curr->children.find(text[i]) == curr->children.end())
         {
-            if (cur_node->arcs.count(new_s[i]) == 0)
-            {
-                nodes.push_back(Node());
-                cur_node->arcs[new_s[i]] = &nodes.back();
-            }
-            cur_node = cur_node->arcs[new_s[i]];
+            curr = curr->suffix_link;
         }
-        cur_node->terminals.push_back(i);
-        terminal_nodes.push_back(cur_node); // Mark the node reached by this string as terminal
-    }
-
-    // Next initialize the links with BFS
-    std::vector<Node *> front;
-    for (std::pair<char, Node *> cp : root->arcs)
-    { // Process root separately
-        cp.second->link = root;
-        front.push_back(cp.second); // Initialize the queue
-    }
-    for (int i = 0; i < (int)front.size(); i++)
-    {
-        Node *cur_node = front[i];
-        for (std::pair<char, Node *> cp : cur_node->arcs)
-        { // Iterate over all arcs
-            char c = cp.first;
-            Node *next = cp.second;
-            Node *link = cur_node->link;
-
-            while (link != 0 && link->arcs.count(c) == 0)
-            {                      // While we can't add c to suffix
-                link = link->link; // Move to smaller suffix
-            }
-            if (link == 0)
-                link = root; // Character not matched
-            else
-                link = link->arcs[c];
-
-            next->link = link;
-            front.push_back(next);
-        }
-    }
-}
-
-std::vector<size_t> str::AhoTrie::process_string(char *s)
-{
-    Node *cur_node = root;
-    for (size_t i = 0; i < strlen(s); i++)
-    {
-        while (cur_node != 0 && cur_node->arcs.count(s[i]) == 0)
-        {                              // If no arc allows for this character
-            cur_node = cur_node->link; // Move to smaller suffix
-        }
-        if (cur_node == 0)
-            cur_node = root; // Character not matched
-        else
-            cur_node = cur_node->arcs[s[i]];
-
-        cur_node->count++;
-    }
-
-    std::vector<Node *> front(1, root); // First do BFS to find a depth-based ordering of nodes
-    for (int i = 0; i < (int)front.size(); i++)
-    {
-        for (std::pair<char, Node *> cp : front[i]->arcs)
+        if (curr->children.find(text[i]) != curr->children.end())
         {
-            front.push_back(cp.second);
+            curr = curr->children[text[i]];
         }
-    }
-    for (int i = (int)front.size() - 1; i > 0; i--)
-    { // Traverse the trie in reverse order of depth
-        if (front[i]->link != 0)
+        if (curr->is_end_of_word)
         {
-            // If a string is matched, then so are all its suffixes
-            front[i]->link->count += front[i]->count; // Send the counts up the links
+            result.push_back(i - patterns[curr->depth - 1].length() + 1);
+            // cout << "Found pattern: " << patterns[curr->depth - 1] << " at index " << i - patterns[curr->depth - 1].length() + 1 << endl;
+        }
+        TrieNode *output_node = curr->output_link;
+        while (output_node != nullptr && !curr->is_end_of_word)
+        {
+            result.push_back(i - patterns[output_node->depth - 1].length() + 1);
+            // cout << "Found pattern: " << patterns[output_node->depth - 1] << " at index " << i - patterns[output_node->depth - 1].length() + 1 << endl;
+            output_node = output_node->output_link;
         }
     }
-
-    std::vector<size_t> result(num_terminals, 0); // Go through the 'dictionary', count occurrences
-    for (size_t i = 0; i < num_terminals; i++)
-    {
-        result[i] = terminal_nodes[i]->count;
-    }
-
     return result;
+}
+
+str::AhoCorasick::AhoCorasick(std::vector<std::string> &patterns)
+{
+    root = new TrieNode();
+    this->patterns = patterns;
+    this->build_trie();
+    this->build_suffix_links();
+    this->build_output_links();
+}
+
+void str::AhoCorasick::build_trie()
+{
+    for (int i = 0; i < patterns.size(); i++)
+    {
+        TrieNode *curr = root;
+        for (char c : patterns[i])
+        {
+            if (curr->children.find(c) == curr->children.end())
+            {
+                curr->children[c] = new TrieNode(curr->depth + 1);
+            }
+            curr = curr->children[c];
+        }
+        curr->is_end_of_word = true;
+    }
+}
+
+void str::AhoCorasick::build_suffix_links()
+{
+    std::queue<str::TrieNode *> q;
+    for (auto &p : root->children)
+    {
+        q.push(p.second);
+        p.second->suffix_link = root;
+    }
+    while (!q.empty())
+    {
+        TrieNode *curr = q.front();
+        q.pop();
+        for (auto &p : curr->children)
+        {
+            char c = p.first;
+            TrieNode *child = p.second;
+            q.push(child);
+            TrieNode *suffix = curr->suffix_link;
+            while (suffix != root && suffix->children.find(c) == suffix->children.end())
+            {
+                suffix = suffix->suffix_link;
+            }
+            if (suffix->children.find(c) != suffix->children.end())
+            {
+                suffix = suffix->children[c];
+            }
+            child->suffix_link = suffix;
+        }
+    }
+}
+
+void str::AhoCorasick::build_output_links()
+{
+    std::queue<str::TrieNode *> q;
+    for (auto &p : root->children)
+    {
+        q.push(p.second);
+    }
+    while (!q.empty())
+    {
+        TrieNode *curr = q.front();
+        q.pop();
+        if (curr->suffix_link != nullptr)
+        {
+            if (curr->suffix_link->is_end_of_word)
+            {
+                curr->output_link = curr->suffix_link;
+            }
+            else
+            {
+                curr->output_link = curr->suffix_link->output_link;
+            }
+        }
+        for (auto &p : curr->children)
+        {
+            q.push(p.second);
+        }
+    }
 }

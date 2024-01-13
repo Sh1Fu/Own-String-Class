@@ -1,3 +1,4 @@
+#pragma once
 #ifndef _MYSTRING_H_
 #define _MYSTRING_H_
 #include <cstring>
@@ -10,9 +11,10 @@
 #include <fstream>
 #include <cstdlib>
 
+#include <string>
 #include <vector>
+#include <queue>
 #include <map>
-#include <deque>
 
 namespace str
 {
@@ -35,27 +37,37 @@ namespace str
     };
 
     /* An one-use trie for the Aho-Corasick algorithm. Need to reset count to zero for all nodes to reuse */
-    struct AhoTrie
-    { 
-        /* Basic Node structure */
-        struct Node
+    struct TrieNode
+    {
+        std::map<char, TrieNode *> children;
+        bool is_end_of_word;
+        int depth;
+        TrieNode *suffix_link;
+        TrieNode *output_link;
+
+        TrieNode(int depth = 0)
         {
-            Node *link = 0;
-            std::vector<int> terminals;
-            std::map<char, Node *> arcs;
-            size_t count = 0; // How many times reached in string
-        };
+            this->depth = depth;
+            this->is_end_of_word = false;
+            this->suffix_link = nullptr;
+            this->output_link = nullptr;
+        }
+    };
 
-        size_t num_terminals;
-        Node *root;
+    /* Aho-Corasick class for main init functions. */
+    class AhoCorasick
+    {
+    private:
+        TrieNode *root;
+        std::vector<std::string> patterns;
 
-        /* We use deque to prevent pointer invalidation when capacity is exceeded */
-        std::deque<Node> nodes; 
-        std::vector<Node *> terminal_nodes;
-
-        AhoTrie();
-        void init(std::vector<char *> &strs);
-        std::vector<size_t> process_string(char * s);
+    public:
+        std::vector<size_t> find(MyString &current_string);
+        void build_trie();
+        void build_suffix_links();
+        void build_output_links();
+        AhoCorasick(std::vector<std::string> &patterns);
+        ~AhoCorasick();
     };
 
     bool operator==(const MyString &first_object, const MyString &second_object);
@@ -183,13 +195,13 @@ namespace str
         size_t find(const char *str, size_t index);
         size_t find(std::string &str);
         size_t find(std::string &str, size_t index);
-        std::vector<size_t> find(std::vector<char *> &strs);
+        void find(std::vector<std::string> &strs, std::vector<size_t> &result);
 
         /* Input and Output stream overloading as friend function */
         friend std::istream &str::operator>>(std::istream &in, MyString &src);
         friend std::ostream &str::operator<<(std::ostream &out, const MyString &src);
-        friend std::ifstream &str::operator>>(std::ifstream &in, MyString &src);
-        friend std::ofstream &str::operator<<(std::ofstream &out, const MyString &src);
+        /*friend std::ifstream &str::operator>>(std::ifstream &in, MyString &src);
+        friend std::ofstream &str::operator<<(std::ofstream &out, const MyString &src);*/
     };
 #include "MyString.ipp"
 

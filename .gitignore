@@ -49,6 +49,7 @@ include/divisible/*
 
 build/**/*
 .vscode/*
+.vs/
 
 include/*
 lib/*

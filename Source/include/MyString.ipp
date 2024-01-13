@@ -1,3 +1,4 @@
+#pragma once
 #include "MyString.hpp"
 using namespace str;
 
@@ -62,14 +63,14 @@ MyString::MyString(T possible_int) : MyString()
     }
 }
 
-template<typename T, class = typename std::enable_if<std::is_integral<T>::value>::type>
-inline  str::int_converter::operator T() const
-{
-    return static_cast<T>(atoi(buffer));
-}
-
-template<typename T, class = typename std::enable_if<std::is_floating_point<T>::value>::type>
-inline str::floating_converter::operator T()  const
-{
-    return static_cast<T>(atof(buffer));
-}
+//template<typename T, class = typename std::enable_if<std::is_integral<T>::value>::type>
+//inline  str::int_converter::operator T() const
+//{
+//    return static_cast<T>(atoi(buffer));
+//}
+//
+//template<typename T, class = typename std::enable_if<std::is_floating_point<T>::value>::type>
+//inline str::floating_converter::operator T()  const
+//{
+//    return static_cast<T>(atof(buffer));
+//}

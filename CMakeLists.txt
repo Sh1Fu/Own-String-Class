@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.16)
 project("Own string class")
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS "-Wall -Wno-format")
 
 include(FetchContent)
 FetchContent_Declare(
@@ -15,4 +14,5 @@ FetchContent_MakeAvailable(googletest)
 
 include(CTest)
 enable_testing()
+include_directories(Source/include)
 add_subdirectory(Source) 
